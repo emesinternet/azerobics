@@ -1,36 +1,28 @@
 # Azerobics
 
-A small exercise guide for World of Warcraft: Forever beta 1.60.1.
+Azerobics turns flight time into an exercise break in **WoW Forever**.
 
-Flight paths can start a guide with push-ups, sit-ups or jumping jacks.
-Choose an orc with the Horde landscape or a night elf in Elwynn Forest at night.
-Each movement uses 0.75 seconds each way. Pace changes only the pause.
-Sound cues, a volume slider, a minimap button and a movable window are included.
-The landing summary stays open until you click a close button.
+Follow an orc or night elf through **push-ups, sit-ups, or jumping jacks**.
+Choose your pace, adjust the sound cues, and see your totals when you land.
 
-The count shows animated repetitions. It does not verify exercise.
+## Install
 
-## Use
+Copy the `Azerobics` folder into your WoW Forever `Interface/AddOns` folder.
+Enable Azerobics in the game's addon list.
 
-Install the `Azerobics` folder in your game's `Interface/AddOns` folder.
-Enter `/azerobics` to start, `/azerobics a` for Alliance, or `/azerobics h` for Horde.
-Drag the title area to move the window.
+For WoW Forever beta 1.60.1.
 
-See [the addon guide](Azerobics/README.md) for settings and commands.
-Get files from [CurseForge](https://www.curseforge.com/wow/addons/azerobics).
+## Start
+
+The guide opens when a flight starts. Use the minimap button or `/azerobics`
+to open it on the ground. Use `/azerobics a` for Alliance or `/azerobics h` for Horde.
+
+Select an exercise and pace in the window. Drag the title area to move it.
+
+[CurseForge](https://www.curseforge.com/wow/addons/azerobics) · [Full guide](Azerobics/README.md)
 
 ## Screenshots
 
 ![Horde push-ups](docs/screenshots/horde-pushups.png)
 ![Alliance sit-ups](docs/screenshots/alliance-situps.png)
 ![Summary after landing](docs/screenshots/horde-summary.png)
-
-## Releases
-
-CurseForge packages pushes to this repository through its repository webhook.
-Untagged updates are alpha files. Tags with `alpha` or `beta` use that release type.
-Other tags create release files. The addon version remains **1.0.0** during development.
-The `.pkgmeta` file keeps development files and screenshots out of the addon ZIP.
-
-Only runtime source, textures, sounds, release settings and public documentation belong here.
-Generated source images, local checks, archives and saved game settings are excluded.
