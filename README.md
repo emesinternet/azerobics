@@ -19,6 +19,12 @@ Drag the title area to move the window.
 See [the addon guide](Azerobics/README.md) for settings and commands.
 Get files from [CurseForge](https://www.curseforge.com/wow/addons/azerobics).
 
+## Screenshots
+
+![Horde push-ups](docs/screenshots/horde-pushups.png)
+![Alliance sit-ups](docs/screenshots/alliance-situps.png)
+![Summary after landing](docs/screenshots/horde-summary.png)
+
 ## Releases
 
 CurseForge packages pushes to this repository through its repository webhook.
