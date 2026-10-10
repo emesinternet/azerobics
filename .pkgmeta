@@ -1,0 +1,11 @@
+package-as: Azerobics
+enable-nolib-creation: no
+move-folders:
+  Azerobics/Azerobics: Azerobics
+ignore:
+  - README.md
+  - docs
+  - assets
+  - work
+  - outputs
+  - LICENSE
