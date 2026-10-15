@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Azerobics
 ## Notes: Follow exercise cues during flight paths.
-## Author: emesi
-## Version: 1.0.0
+## Author: MarcSinger.xyz
+## Version: 1.1.0
 ## SavedVariables: AzerobicsDB
 ## X-Curse-Project-ID: 1737495
 
