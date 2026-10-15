@@ -2,8 +2,12 @@
 
 Azerobics turns flight time into an exercise break in **WoW Forever**.
 
-Follow an orc or night elf through **push-ups, sit-ups, or jumping jacks**.
-Choose your pace, adjust the sound cues, and see your totals when you land.
+Follow **push-ups, sit-ups, jumping jacks, or squats** while you fly.
+Auto uses your character's faction, race, and sex. You can also choose any of
+the eight original races or Skyborne, male or female, with either background.
+
+Choose your pace, set the sound cue volume, and see your totals when you land.
+The summary stays open until you close it.
 
 ## Install
 
@@ -17,12 +21,13 @@ For WoW Forever beta 1.60.1.
 The guide opens when a flight starts. Use the minimap button or `/azerobics`
 to open it on the ground. Use `/azerobics a` for Alliance or `/azerobics h` for Horde.
 
-Select an exercise and pace in the window. Drag the title area to move it.
+Use the three dropdowns above the character to change the background, race,
+and sex. Select an exercise below the image, then choose a pace in the bottom
+row. Pace changes the pause between repetitions. Drag the title area to move
+the window.
 
 [CurseForge](https://www.curseforge.com/wow/addons/azerobics) · [Full guide](Azerobics/README.md)
 
-## Screenshots
+## In the game
 
-![Horde push-ups](docs/screenshots/horde-pushups.png)
-![Alliance sit-ups](docs/screenshots/alliance-situps.png)
-![Summary after landing](docs/screenshots/horde-summary.png)
+![Azerobics in WoW Forever: Auto selects Horde, Orc and Male; exercise and pace controls are below the character.](docs/screenshots/azerobics.png)

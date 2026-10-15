@@ -6,4 +6,5 @@
 ## SavedVariables: AzerobicsDB
 ## X-Curse-Project-ID: 1737495
 
+Characters.lua
 Azerobics.lua

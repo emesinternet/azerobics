@@ -1,4 +1,4 @@
-local addonName = ...
+local addonName, addon = ...
 local artPath = "Interface\\AddOns\\Azerobics\\Art\\"
 local soundPath = "Interface\\AddOns\\Azerobics\\Sounds\\"
 -- New sample data uses a new bank name to avoid older cached sounds.
@@ -9,10 +9,12 @@ local movementTime = phaseTime * 2
 local rates = { "Slow", "Easy", "Steady", "Brisk", "Fast" }
 local selectedSpeed = 3
 local selectedExercise, activeFaction = 1, nil
+local selectedRace, selectedSex = 5, "male"
 local exercises = {
     { key = "pushups", label = "Push-ups" },
-    { key = "situps", label = "Sit-ups", file = "situps" },
-    { key = "jumpingJacks", label = "Jumping jacks", file = "jumping-jacks" },
+    { key = "situps", label = "Sit-ups" },
+    { key = "jumpingJacks", label = "Jumping jacks" },
+    { key = "squats", label = "Squats" },
 }
 local countdown, cycleTime, repetitions = 5, 0, 0
 local debugMode, wasOnTaxi = false, false
@@ -21,38 +23,10 @@ local flightStartTime, flightRepetitions, flightHadGuide = 0, {}, false
 local summaryShown = false
 local speedButtons = {}
 local exerciseButtons = {}
-local factionButtons = {}
+local dropdowns = {}
 local factions = {
-    Horde = { background = "horde-background", character = "orc", up = "orc-up", down = "orc-down" },
-    Alliance = { background = "alliance-background", character = "night-elf", up = "night-elf-up", down = "night-elf-down" },
-}
-
-local sheets = {
-    situps = {
-        scale = 480 / 1000, left = 240, height = 1024,
-        Horde = {
-            scale = 1.15,
-            origins = { -114, 327 },
-            crops = { { 320, 20, 1140, 540 }, { 320, 660, 1140, 970 } },
-            contact = { 320, 20, 1140, 540 },
-        },
-        Alliance = {
-            origins = { -78, 343 },
-            crops = { { 240, 10, 1210, 570 }, { 240, 630, 1210, 975 } },
-            contact = { 240, 10, 1210, 570 },
-        },
-    },
-    jumpingJacks = {
-        scale = 576 / 1122, left = 93.5, bottom = 362, height = 2048,
-        Horde = {
-            origins = { 8, 645 },
-            crops = { { 200, 50, 920, 715 }, { 200, 725, 920, 1360 } },
-        },
-        Alliance = {
-            origins = { 28, 626 },
-            crops = { { 290, 45, 835, 725 }, { 290, 730, 835, 1345 } },
-        },
-    },
+    Horde = { background = "horde-background" },
+    Alliance = { background = "alliance-background" },
 }
 
 local function StopCue()
@@ -63,7 +37,7 @@ local function StopCue()
 end
 
 local window = CreateFrame("Frame", "AzerobicsWindow", UIParent, "BackdropTemplate")
-window:SetSize(660, 566)
+window:SetSize(660, 604)
 window:SetPoint("CENTER")
 window:SetFrameStrata("DIALOG")
 window:EnableMouse(true)
@@ -94,10 +68,10 @@ local title = window:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("LEFT", logo, "RIGHT", 8, 0)
 title:SetText("Azerobics")
 
-local function CreateControl(label, name)
-    local button = CreateFrame("Button", name, window, "BackdropTemplate")
+local function CreateControl(label, name, parent)
+    local button = CreateFrame("Button", name, parent or window, "BackdropTemplate")
     button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+        edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 2 })
     button:SetBackdropColor(0.13, 0.115, 0.09, 1)
     button:SetBackdropBorderColor(0.4, 0.32, 0.2, 1)
     button.label = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -131,11 +105,66 @@ local function SelectControl(button, selected)
     end
 end
 
+local function CloseMenus()
+    for _, dropdown in ipairs(dropdowns) do dropdown.menu:Hide() end
+end
+
+local dismissMenu = CreateFrame("Button", nil, window)
+dismissMenu:SetAllPoints(window)
+dismissMenu:SetFrameLevel(window:GetFrameLevel() + 5)
+dismissMenu:SetScript("OnClick", function() CloseMenus(); dismissMenu:Hide() end)
+dismissMenu:Hide()
+
+local function CreateDropdown(label, name, column, options, choose)
+    local button = CreateControl(label, name)
+    button:SetSize(202, 32)
+    button:SetPoint("TOPLEFT", 18 + column * 210, -82)
+    button:SetFrameLevel(window:GetFrameLevel() + 6)
+    button.label:ClearAllPoints()
+    button.label:SetPoint("LEFT", 8, 0)
+    local arrow = button:CreateTexture(nil, "OVERLAY")
+    arrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+    arrow:SetSize(16, 16)
+    arrow:SetPoint("RIGHT", -4, 0)
+    local menu = CreateFrame("Frame", nil, window, "BackdropTemplate")
+    menu:SetSize(202, #options * 30 + 12)
+    menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -4)
+    menu:SetFrameLevel(window:GetFrameLevel() + 10)
+    menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+    menu:SetBackdropColor(0.07, 0.065, 0.055, 1)
+    menu:SetBackdropBorderColor(0.65, 0.5, 0.25, 1)
+    menu:EnableMouse(true)
+    menu:Hide()
+    button.menu, button.options = menu, {}
+    for index, option in ipairs(options) do
+        local item = CreateControl(option.label, nil, menu)
+        item:SetSize(190, 28)
+        item:SetPoint("TOPLEFT", 6, -6 - (index - 1) * 30)
+        item:SetScript("OnClick", function()
+            CloseMenus()
+            dismissMenu:Hide()
+            choose(option.value)
+        end)
+        button.options[index] = { button = item, value = option.value }
+    end
+    button:SetScript("OnClick", function()
+        local show = not menu:IsShown()
+        CloseMenus()
+        menu:SetShown(show)
+        dismissMenu:SetShown(show)
+    end)
+    dropdowns[#dropdowns + 1] = button
+    return button
+end
+
 local close = CreateFrame("Button", nil, window, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", 0, 0)
 close:SetScript("OnClick", function() window:Hide() end)
 window:SetScript("OnHide", function()
     window:StopMovingOrSizing()
+    CloseMenus()
+    dismissMenu:Hide()
     if summaryShown then
         table.insert(UISpecialFrames, "AzerobicsWindow")
         summaryShown = false
@@ -201,30 +230,33 @@ stage:SetPoint("TOP", 0, -124)
 local background = stage:CreateTexture(nil, "BACKGROUND")
 background:SetAllPoints(stage)
 
+local feet = stage:CreateTexture(nil, "ARTWORK")
+feet:SetSize(128, 60)
+feet:SetPoint("BOTTOM", stage, "BOTTOM", 0, 42)
+
 local up = CreateFrame("Frame", nil, stage)
 local down = CreateFrame("Frame", nil, stage)
 for _, pose in ipairs({ up, down }) do
-    pose.pieces = {}
-    for index = 1, 4 do
-        pose.pieces[index] = pose:CreateTexture(nil, "ARTWORK")
-    end
+    pose:SetAllPoints(stage)
     pose.sprite = pose:CreateTexture(nil, "ARTWORK")
     pose.mask = pose:CreateMaskTexture()
-    pose.mask:SetAllPoints(stage)
+    pose.mask:SetSize(512, 512)
+    pose.mask:SetPoint("BOTTOM", stage, "BOTTOM", 0, 10)
     pose.sprite:AddMaskTexture(pose.mask)
 end
 down:Hide()
 
-local feet = stage:CreateTexture(nil, "ARTWORK")
 local contacts = CreateFrame("Frame", nil, stage)
+contacts:SetAllPoints(stage)
 contacts:SetFrameLevel(up:GetFrameLevel() + 1)
-local leftHand = contacts:CreateTexture(nil, "ARTWORK")
+local fixedContacts = contacts:CreateTexture(nil, "ARTWORK")
 local contactMask = contacts:CreateMaskTexture()
-contactMask:SetAllPoints(stage)
-leftHand:AddMaskTexture(contactMask)
-local rightHand = contacts:CreateTexture(nil, "ARTWORK")
+contactMask:SetSize(512, 512)
+contactMask:SetPoint("BOTTOM", stage, "BOTTOM", 0, 10)
+fixedContacts:AddMaskTexture(contactMask)
 local bodyShadow = stage:CreateTexture(nil, "BACKGROUND", nil, 1)
-local footShadow = stage:CreateTexture(nil, "BACKGROUND", nil, 1)
+bodyShadow:SetTexture(artPath .. "ground-shadow.tga")
+bodyShadow:SetPoint("BOTTOM", 0, 10)
 
 local counter = stage:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 counter:SetFont(STANDARD_TEXT_FONT, 32, "OUTLINE")
@@ -232,100 +264,63 @@ counter:SetPoint("TOP", 0, -16)
 counter:SetSize(620, 52)
 
 local function SetArt(texture, file)
-    texture:SetTexture(artPath .. file .. ".tga")
-    local width = file == "night-elf-up" and 1585 or 1586
-    texture:SetTexCoord(0, width / 2048, 0, 992 / 1024)
+    texture:SetTexture(artPath .. file .. ".blp")
+    texture:SetTexCoord(0, 1, 0, 640 / 1024)
 end
 
-local function SetPiece(texture, file, source, destination, lowerLeft, lowerRight)
-    destination = destination or source
-    local left, top, right, bottom = unpack(destination)
-    texture:SetTexture(artPath .. file .. ".tga")
-    texture:SetSize((right - left) * 480 / 1586, (bottom - top) * 300 / 992)
-    texture:SetPoint("TOPLEFT", stage, "BOTTOMLEFT", 80 + left * 480 / 1586,
-        304 - top * 300 / 992)
-    local x1, y1, x2, y2 = unpack(source)
-    local textureHeight = file == "ground-shadow" and 2048 or 1024
-    texture:SetTexCoord(x1 / 2048, y1 / textureHeight, (lowerLeft or x1) / 2048, y2 / textureHeight,
-        x2 / 2048, y1 / textureHeight, (lowerRight or x2) / 2048, y2 / textureHeight)
+local function SetPose(texture, file, region)
+    local x, y, width, height, left, top = unpack(region)
+    texture:SetTexture(file .. ".blp")
+    texture:SetSize(width, height)
+    texture:ClearAllPoints()
+    texture:SetPoint("TOPLEFT", stage, "TOPLEFT", 64 + left, 122 - top)
+    texture:SetTexCoord(x / 1024, (x + width) / 1024, y / 1024, (y + height) / 1024)
 end
 
-local function SetSprite(texture, file, crop, originY, sheet, scale)
-    scale = scale or 1
-    local left, top, right, bottom = unpack(crop)
-    texture:SetTexture(artPath .. file .. ".tga")
-    texture:SetSize((right - left) * sheet.scale * scale, (bottom - top) * sheet.scale * scale)
-    texture:SetPoint("BOTTOMLEFT", stage, "BOTTOMLEFT", 320 + (80 + (left - sheet.left) * sheet.scale - 320) * scale,
-        16 + ((sheet.bottom or 304) - (bottom - originY) * sheet.scale - 16) * scale)
-    texture:SetTexCoord(left / 2048, right / 2048, top / sheet.height, bottom / sheet.height)
-end
-
-local function SetCharacter(images, faction)
-    local exercise = exercises[selectedExercise]
-    local pushups = exercise.key == "pushups"
-    local sheet = sheets[exercise.key]
-    local poses = sheet and sheet[faction]
-    local file = sheet and images.character .. "-" .. exercise.file
-    leftHand:ClearAllPoints()
-    contactMask:SetTexture("Interface\\Buttons\\WHITE8X8")
-    contacts:SetShown(pushups or exercise.key == "situps")
-    leftHand:SetShown(pushups or exercise.key == "situps")
-    rightHand:SetShown(pushups)
-    feet:SetShown(pushups)
-    footShadow:SetShown(pushups)
+local function SetCharacter()
+    local key = addon.races[selectedRace].key .. "-" .. selectedSex
+    local file = artPath .. "Characters\\" .. key
+    local frames = addon.frames[key]
+    local first = frames[(selectedExercise - 1) * 2 + 1]
+    -- Masks use separate square files; the game does not crop mask atlases.
+    local maskFile = file .. "-" .. exercises[selectedExercise].key
     for index, pose in ipairs({ up, down }) do
-        pose.mask:SetTexture("Interface\\Buttons\\WHITE8X8")
-        pose.sprite:SetShown(not pushups)
-        for _, piece in ipairs(pose.pieces) do piece:SetShown(pushups) end
-        if not pushups then
-            SetSprite(pose.sprite, file, poses.crops[index], poses.origins[index], sheet, poses.scale)
-            if poses.contact then
-                pose.mask:SetTexture(artPath .. file .. "-body-mask.tga", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-            end
+        SetPose(pose.sprite, file, frames[(selectedExercise - 1) * 2 + index])
+        pose.mask:SetTexture(maskFile .. "-body-mask.tga", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    end
+    SetPose(fixedContacts, file, first)
+    contactMask:SetTexture(maskFile .. "-contact-mask.tga", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    contacts:SetShown(exercises[selectedExercise].key ~= "jumpingJacks")
+    -- Fixed boots sit behind the body so the lowered chest can cover them.
+    local standing = frames[1]
+    feet:SetTexture(file .. ".blp")
+    feet:SetTexCoord((standing[1] + 192 - standing[5]) / 1024, (standing[1] + 320 - standing[5]) / 1024,
+        (standing[2] + 420 - standing[6]) / 1024, (standing[2] + 480 - standing[6]) / 1024)
+    feet:SetShown(selectedExercise == 1)
+    bodyShadow:SetSize(selectedExercise == 2 and 420 or 300, 26)
+end
+
+local function ResolveCharacter()
+    local _, playerRace = UnitRace("player")
+    selectedRace = 5
+    for index, race in ipairs(addon.races) do
+        if (AzerobicsDB.race == "auto" and race.token == playerRace)
+            or AzerobicsDB.race == race.key then selectedRace = index end
+    end
+    selectedSex = AzerobicsDB.sex == "auto" and (UnitSex("player") == 3 and "female" or "male")
+        or AzerobicsDB.sex
+end
+
+local function UpdateSelectors()
+    local values = { AzerobicsDB.faction, AzerobicsDB.race, AzerobicsDB.sex }
+    local resolved = { activeFaction or UnitFactionGroup("player"), addon.races[selectedRace].label,
+        selectedSex == "female" and "Female" or "Male" }
+    for index, dropdown in ipairs(dropdowns) do
+        dropdown:SetText(values[index] == "auto" and "Auto (" .. resolved[index] .. ")" or resolved[index])
+        for _, option in ipairs(dropdown.options) do
+            SelectControl(option.button, option.value == values[index])
         end
     end
-    if not pushups then
-        if poses.contact then
-            -- One masked lower body keeps the hips, knees, calves and boots joined.
-            SetSprite(leftHand, file, poses.contact, poses.origins[1], sheet, poses.scale)
-            contactMask:SetTexture(artPath .. file .. "-legs-mask.tga", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-        end
-        SetPiece(bodyShadow, "ground-shadow", { 0, 0, 1254, 1254 }, { 350, 900, 1236, 984 })
-        return
-    end
-    -- Ground contacts use one texture each; only the body frames change pose.
-    SetPiece(leftHand, images.up, { 100, 827, 600, 992 })
-    SetPiece(rightHand, images.up, { 986, 827, 1486, 992 })
-    local isOrc = faction == "Horde"
-    if isOrc then
-        SetPiece(feet, images.up, { 600, 700, 986, 855 })
-    else
-        SetPiece(feet, images.down, { 650, 775, 936, 856 })
-    end
-    for _, pose in ipairs({ up, down }) do
-        local raised = pose == up
-        local file = raised and images.up or images.down
-        local centerLeft = isOrc and not raised and 500 or 620
-        local centerRight = isOrc and not raised and 1086 or 966
-        local joinTop = isOrc and not raised and 770 or 560
-        SetPiece(pose.pieces[1], file, { 0, 0, 1586, joinTop })
-        SetPiece(pose.pieces[2], file, { 0, joinTop, centerLeft, raised and 827 or 810 },
-            { 0, joinTop, centerLeft, 827 }, raised and 0 or (isOrc and -65 or -50),
-            isOrc and not raised and 473 or centerLeft)
-        SetPiece(pose.pieces[3], file, { centerRight, joinTop, 1586, raised and 827 or 810 },
-            { centerRight, joinTop, 1586, 827 }, isOrc and not raised and 1113 or centerRight,
-            raised and 1586 or (isOrc and 1651 or 1636))
-        if raised then
-            SetPiece(pose.pieces[4], file, { 620, 560, 966, isOrc and 700 or 690 },
-                { 620, 560, 966, isOrc and 700 or 775 })
-        else
-            -- The orc chest covers the fixed boots; the elf chest ends above them.
-            SetPiece(pose.pieces[4], file, { centerLeft, joinTop, centerRight, isOrc and 910 or 775 })
-        end
-    end
-    SetPiece(bodyShadow, "ground-shadow", { 0, 0, 1254, 1254 }, { 440, 850, 1146, 974 })
-    SetPiece(footShadow, "ground-shadow", { 0, 0, 1254, 1254 },
-        { 600, isOrc and 745 or 795, 986, isOrc and 835 or 855 })
 end
 
 local function UpdateSpeedButtons()
@@ -340,17 +335,10 @@ local function UpdateExerciseButtons()
     end
 end
 
-local function UpdateFactionButtons()
-    for faction, button in pairs(factionButtons) do SelectControl(button, faction == activeFaction) end
-end
-
-local speedLabel = window:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-speedLabel:SetPoint("BOTTOMLEFT", 18, 18)
-speedLabel:SetText("Pace")
 for index, rate in ipairs(rates) do
     local button = CreateControl(rate)
-    button:SetSize(100, 28)
-    button:SetPoint("BOTTOMLEFT", 92 + (index - 1) * 108, 10)
+    button:SetSize(118, 28)
+    button:SetPoint("BOTTOMLEFT", 18 + (index - 1) * 126, 10)
     button:SetScript("OnClick", function()
         cycleTime = math.min(cycleTime, durations[index])
         selectedSpeed = index
@@ -368,12 +356,14 @@ summaryButton:Hide()
 
 local function Start(faction, isDebug)
     if summaryShown then return end
+    faction = faction or (AzerobicsDB.faction == "auto" and UnitFactionGroup("player") or AzerobicsDB.faction)
     local images = factions[faction]
     if not images then return end
     activeFaction = faction
-    UpdateFactionButtons()
+    ResolveCharacter()
+    UpdateSelectors()
     SetArt(background, images.background)
-    SetCharacter(images, faction)
+    SetCharacter()
     countdown, cycleTime, repetitions = 5, 0, 0
     StopCue()
     running, cuePose = true, nil
@@ -382,15 +372,17 @@ local function Start(faction, isDebug)
         flightHadGuide = true
     end
     summaryButton:Hide()
-    speedLabel:Show()
+    CloseMenus()
+    dismissMenu:Hide()
+    for _, dropdown in ipairs(dropdowns) do dropdown:Show() end
     for _, button in ipairs(speedButtons) do button:Show() end
     for _, button in ipairs(exerciseButtons) do button:Show() end
-    for _, button in pairs(factionButtons) do button:Show() end
-    local restDown = exercises[selectedExercise].key == "situps"
-    up:SetShown(not restDown)
-    down:SetShown(restDown)
+    up:Show()
+    down:Hide()
     counter:SetTextColor(1, 0.85, 0.3)
     counter:SetFont(STANDARD_TEXT_FONT, 32, "OUTLINE")
+    counter:ClearAllPoints()
+    counter:SetPoint("TOP", stage, "TOP", 0, -16)
     counter:SetSize(620, 52)
     counter:SetText("Starting in 5")
     window:Show()
@@ -398,8 +390,8 @@ end
 
 for index, exercise in ipairs(exercises) do
     local button = CreateControl(exercise.label)
-    button:SetSize(200, 28)
-    button:SetPoint("TOPLEFT", 18 + (index - 1) * 212, -86)
+    button:SetSize(150, 28)
+    button:SetPoint("BOTTOMLEFT", 18 + (index - 1) * 158, 46)
     button:SetScript("OnClick", function()
         if selectedExercise == index then return end
         selectedExercise = index
@@ -410,19 +402,36 @@ for index, exercise in ipairs(exercises) do
     exerciseButtons[index] = button
 end
 
-for index, faction in ipairs({ "Horde", "Alliance" }) do
-    local button = CreateControl(faction)
-    button:SetSize(88, 28)
-    button:SetPoint("TOPLEFT", 438 + (index - 1) * 96, -12)
-    button:SetScript("OnClick", function()
-        if summaryShown or activeFaction == faction then return end
-        activeFaction = faction
-        SetArt(background, factions[faction].background)
-        SetCharacter(factions[faction], faction)
-        UpdateFactionButtons()
-    end)
-    factionButtons[faction] = button
+CreateDropdown("Faction", "AzerobicsFactionButton", 0, {
+    { label = "Auto", value = "auto" }, { label = "Horde", value = "Horde" },
+    { label = "Alliance", value = "Alliance" },
+}, function(value)
+    AzerobicsDB.faction = value
+    activeFaction = value == "auto" and UnitFactionGroup("player") or value
+    SetArt(background, factions[activeFaction].background)
+    UpdateSelectors()
+end)
+
+local raceOptions = { { label = "Auto", value = "auto" } }
+for _, race in ipairs(addon.races) do
+    raceOptions[#raceOptions + 1] = { label = race.label, value = race.key }
 end
+CreateDropdown("Race", "AzerobicsRaceButton", 1, raceOptions, function(value)
+    AzerobicsDB.race = value
+    ResolveCharacter()
+    UpdateSelectors()
+    SetCharacter()
+end)
+
+CreateDropdown("Sex", "AzerobicsSexButton", 2, {
+    { label = "Auto", value = "auto" }, { label = "Male", value = "male" },
+    { label = "Female", value = "female" },
+}, function(value)
+    AzerobicsDB.sex = value
+    ResolveCharacter()
+    UpdateSelectors()
+    SetCharacter()
+end)
 
 local minimapButton = CreateFrame("Button", "AzerobicsMinimapButton", Minimap)
 minimapButton:SetSize(32, 32)
@@ -447,7 +456,7 @@ minimapButton:SetScript("OnClick", function()
     if window:IsShown() then
         window:Hide()
     else
-        Start(UnitFactionGroup("player"), true)
+        Start(nil, true)
     end
 end)
 minimapButton:SetScript("OnEnter", function(self)
@@ -486,10 +495,11 @@ window:SetScript("OnUpdate", function(_, elapsed)
         counter:SetFormattedText("%s: %d", exercise.label, repetitions)
     end
     local pose = cycleTime >= phaseTime and cycleTime < movementTime and "down" or "up"
-    if exercise.key == "situps" then pose = pose == "up" and "down" or "up" end
+    local activePose = pose == "down"
+    if exercise.key == "situps" then pose = activePose and "up" or "down" end
     if pose ~= cuePose then
-        up:SetShown(pose == "up")
-        down:SetShown(pose == "down")
+        up:SetShown(not activePose)
+        down:SetShown(activePose)
         cuePose = pose
         StopCue()
         if AzerobicsDB.soundCues and AzerobicsDB.cueVolume > 0 then
@@ -505,7 +515,7 @@ local function CheckFlight()
     wasOnTaxi = onTaxi
     if onTaxi then
         flightStartTime, flightRepetitions, flightHadGuide = GetTime(), {}, false
-        if AzerobicsDB.autoStart then Start(UnitFactionGroup("player"), false) end
+        if AzerobicsDB.autoStart then Start(nil, false) end
     elseif flightHadGuide then
         running, debugMode, cuePose = false, false, nil
         StopCue()
@@ -521,7 +531,9 @@ local function CheckFlight()
         end
         if #counts == 0 then counts[1] = exercises[selectedExercise].label .. ": 0" end
         local flightTime = string.format("Flight time: %d:%02d", math.floor(seconds / 60), seconds % 60)
-        counter:SetSize(620, 104)
+        counter:ClearAllPoints()
+        counter:SetPoint("TOP", window, "TOP", 0, -74)
+        counter:SetSize(620, 120)
         counter:SetText(flightTime .. (#counts == 1 and " | " or "\n") .. table.concat(counts, "\n"))
         summaryShown = true
         for index, name in ipairs(UISpecialFrames) do
@@ -530,10 +542,11 @@ local function CheckFlight()
                 break
             end
         end
-        speedLabel:Hide()
+        CloseMenus()
+        dismissMenu:Hide()
+        for _, dropdown in ipairs(dropdowns) do dropdown:Hide() end
         for _, button in ipairs(speedButtons) do button:Hide() end
         for _, button in ipairs(exerciseButtons) do button:Hide() end
-        for _, button in pairs(factionButtons) do button:Hide() end
         summaryButton:Show()
         window:Show()
     elseif not debugMode and not summaryShown then
@@ -564,6 +577,15 @@ driver:SetScript("OnEvent", function(_, event, name)
             if AzerobicsDB.exercise == exercise.key then selectedExercise = index end
         end
         AzerobicsDB.exercise = exercises[selectedExercise].key
+        local validRace = AzerobicsDB.race == "auto"
+        for index, race in ipairs(addon.races) do
+            if AzerobicsDB.race == race.key then validRace = true end
+        end
+        if not validRace then AzerobicsDB.race = "auto" end
+        if AzerobicsDB.sex ~= "male" and AzerobicsDB.sex ~= "female" then AzerobicsDB.sex = "auto" end
+        if not factions[AzerobicsDB.faction] then AzerobicsDB.faction = "auto" end
+        ResolveCharacter()
+        UpdateSelectors()
         if type(AzerobicsDB.soundCues) ~= "boolean" then AzerobicsDB.soundCues = true end
         if type(AzerobicsDB.autoStart) ~= "boolean" then AzerobicsDB.autoStart = true end
         local volumes = { [0] = true, [25] = true, [50] = true, [75] = true, [100] = true }
@@ -593,7 +615,7 @@ SlashCmdList.AZEROBICS = function(message)
     if command == "hide" then
         window:Hide()
     elseif command == "" then
-        Start(UnitFactionGroup("player"), true)
+        Start(nil, true)
     elseif command == "h" or command == "horde" then
         Start("Horde", true)
     elseif command == "a" or command == "alliance" then
