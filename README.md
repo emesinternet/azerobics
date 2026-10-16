@@ -30,4 +30,6 @@ the window.
 
 ## In the game
 
-![Azerobics in WoW Forever: Auto selects Horde, Orc and Male; exercise and pace controls are below the character.](docs/screenshots/azerobics.png)
+![Azerobics push-ups in WoW Forever. Auto selects Horde, Orc and Male.](docs/screenshots/azerobics-pushups.jpg)
+
+See the other views: [sit-ups](docs/screenshots/azerobics-situps.jpg), [jumping jacks](docs/screenshots/azerobics-jumping-jacks.jpg), [squats](docs/screenshots/azerobics-squats.jpg), and the [Alliance background](docs/screenshots/azerobics-alliance-jumping-jacks.jpg).
