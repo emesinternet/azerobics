@@ -4,6 +4,7 @@ move-folders:
   Azerobics/Azerobics: Azerobics
 ignore:
   - README.md
+  - RELEASING.md
   - docs
   - assets
   - work

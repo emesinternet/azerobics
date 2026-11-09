@@ -34,7 +34,7 @@ the window.
 Check **Cycle workouts** beside **Start on flights** to select the next exercise
 each time the guide opens while flying. This setting is off by default.
 
-[CurseForge](https://www.curseforge.com/wow/addons/azerobics) · [Full guide](Azerobics/README.md)
+[CurseForge](https://www.curseforge.com/wow/addons/azerobics) · [Full guide](Azerobics/README.md) · [Release guide](RELEASING.md)
 
 ## In the game
 
