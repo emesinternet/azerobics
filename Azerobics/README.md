@@ -11,9 +11,19 @@ The guide opens when a flight starts if **Start on flights** is checked.
 Use the minimap button or `/azerobics` to open it on the ground.
 Drag the title area to move the window.
 
+Left-click the minimap button to open or close the guide. Hold the left mouse
+button and drag it around the minimap edge to move it. The game saves its position.
+
 Choose **Push-ups**, **Sit-ups**, **Jumping jacks**, or **Squats**.
 Sit-ups and squats use a side view. Push-ups and jumping jacks use a front view.
 Each guide starts with a silent five-second countdown.
+
+Check **Cycle workouts** beside **Start on flights** to select the next exercise
+each time the guide opens while flying. The order is **Push-ups**, **Sit-ups**,
+**Jumping jacks**, then **Squats**, and repeats. This includes an automatic start
+or closing and reopening the guide during the same flight.
+Opening the guide on the ground or selecting an exercise does not advance the cycle.
+Cycle workouts is off by default. The game saves this setting and the selected exercise.
 
 ## Choose your character
 
@@ -45,7 +55,10 @@ final volume. The game saves these settings.
 ## When you land
 
 The summary shows flight time and repetitions for each exercise used during
-the flight. Exercise changes and guides closed early keep their flight totals.
+the flight. Exercise changes keep their flight totals.
+Closing the guide during a flight cancels the workout and skips the landing summary.
+Use the window's close button, the minimap button, Escape, or `/azerobics hide`.
+The summary returns if you open the guide again before landing and leave it open.
 Click **Close summary** or the window's close button to close it.
 The summary stays open until you click. No exercise history is stored.
 
@@ -59,5 +72,5 @@ The counter follows the displayed poses. It cannot confirm that you did an exerc
 - `/azerobics hide` - stop the guide.
 
 Commands keep your selected character. On the ground, the guide runs until
-you close it. During a flight, it ends at landing and shows the summary.
+you close it. During a flight, it ends at landing and shows the summary if left open.
 Escape stops an active guide, but does not close the summary.

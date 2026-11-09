@@ -28,6 +28,30 @@ local factions = {
     Horde = { background = "horde-background" },
     Alliance = { background = "alliance-background" },
 }
+local white = "Interface\\Buttons\\WHITE8X8"
+local uiFont = "Fonts\\ARIALN.TTF"
+
+local function CreateLabel(parent, text, size, r, g, b)
+    local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    label:SetFont(uiFont, size, "")
+    label:SetTextColor(r or 0.91, g or 0.89, b or 0.84)
+    label:SetText(text)
+    return label
+end
+
+local function CreateSurface(parent, width, height)
+    local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    panel:SetSize(width, height)
+    panel:SetBackdrop({ bgFile = white, edgeFile = white, edgeSize = 1 })
+    panel:SetBackdropColor(0.095, 0.085, 0.073, 1)
+    panel:SetBackdropBorderColor(0.23, 0.21, 0.18, 1)
+    local highlight = panel:CreateTexture(nil, "BORDER")
+    highlight:SetColorTexture(0.72, 0.64, 0.48, 0.10)
+    highlight:SetPoint("TOPLEFT", 1, -1)
+    highlight:SetPoint("TOPRIGHT", -1, -1)
+    highlight:SetHeight(1)
+    return panel
+end
 
 local function StopCue()
     if soundHandle then
@@ -37,76 +61,130 @@ local function StopCue()
 end
 
 local window = CreateFrame("Frame", "AzerobicsWindow", UIParent, "BackdropTemplate")
-window:SetSize(660, 604)
+window:SetSize(688, 704)
 window:SetPoint("CENTER")
 window:SetFrameStrata("DIALOG")
 window:EnableMouse(true)
 window:SetClampedToScreen(true)
 window:SetMovable(true)
 local dragHandle = CreateFrame("Frame", nil, window)
-dragHandle:SetSize(420, 44)
-dragHandle:SetPoint("TOPLEFT", 8, 0)
+dragHandle:SetSize(620, 54)
+dragHandle:SetPoint("TOPLEFT", 0, 0)
 dragHandle:EnableMouse(true)
 dragHandle:RegisterForDrag("LeftButton")
 dragHandle:SetScript("OnDragStart", function() window:StartMoving() end)
 dragHandle:SetScript("OnDragStop", function() window:StopMovingOrSizing() end)
 window:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Buttons\\WHITE8X8",
+    bgFile = white,
+    edgeFile = white,
     edgeSize = 1,
 })
-window:SetBackdropColor(0.07, 0.065, 0.055, 1)
-window:SetBackdropBorderColor(0.65, 0.5, 0.25, 1)
+window:SetBackdropColor(0.055, 0.049, 0.041, 1)
+window:SetBackdropBorderColor(0.30, 0.27, 0.21, 1)
 window:Hide()
 table.insert(UISpecialFrames, "AzerobicsWindow")
 
-local logo = window:CreateTexture(nil, "ARTWORK")
+local header = window:CreateTexture(nil, "BACKGROUND")
+header:SetColorTexture(0.10, 0.087, 0.067, 1)
+header:SetPoint("TOPLEFT", 1, -1)
+header:SetSize(686, 52)
+local headerAccent = window:CreateTexture(nil, "ARTWORK")
+headerAccent:SetColorTexture(0.76, 0.58, 0.30, 1)
+headerAccent:SetPoint("TOPLEFT", 24, -1)
+headerAccent:SetSize(40, 2)
+local headerLine = window:CreateTexture(nil, "BORDER")
+headerLine:SetColorTexture(0.30, 0.25, 0.17, 1)
+headerLine:SetPoint("TOPLEFT", 1, -53)
+headerLine:SetSize(686, 1)
+local logoPlate = CreateSurface(window, 40, 40)
+logoPlate:SetPoint("TOPLEFT", 20, -6)
+logoPlate:SetBackdropBorderColor(0.42, 0.33, 0.20, 1)
+local logo = logoPlate:CreateTexture(nil, "ARTWORK")
 logo:SetTexture(artPath .. "azerobics-icon.tga")
-logo:SetSize(28, 28)
-logo:SetPoint("TOPLEFT", 16, -12)
+logo:SetSize(32, 32)
+logo:SetPoint("CENTER")
 local title = window:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("LEFT", logo, "RIGHT", 8, 0)
+title:SetFont(STANDARD_TEXT_FONT, 20, "")
+title:SetTextColor(0.96, 0.92, 0.82)
+title:SetPoint("TOPLEFT", 72, -9)
 title:SetText("Azerobics")
+local subtitle = CreateLabel(window, "Your in-flight exercise break", 12, 0.64, 0.61, 0.54)
+subtitle:SetPoint("TOPLEFT", 73, -33)
+
+local settingsPanel = CreateSurface(window, 640, 104)
+settingsPanel:SetPoint("TOPLEFT", 24, -64)
+local settingsDivider = settingsPanel:CreateTexture(nil, "ARTWORK")
+settingsDivider:SetColorTexture(0.23, 0.21, 0.18, 1)
+settingsDivider:SetSize(614, 1)
+settingsDivider:SetPoint("TOPLEFT", 13, -70)
+local footer = CreateFrame("Frame", nil, window)
+footer:SetSize(640, 100)
+footer:SetPoint("TOPLEFT", 24, -592)
+local exerciseLabel = CreateLabel(footer, "Exercise", 12, 0.66, 0.62, 0.54)
+exerciseLabel:SetPoint("TOPLEFT")
+local exerciseLine = footer:CreateTexture(nil, "ARTWORK")
+exerciseLine:SetColorTexture(0.23, 0.21, 0.18, 1)
+exerciseLine:SetPoint("TOPLEFT", 64, -6)
+exerciseLine:SetSize(576, 1)
+local paceLabel = CreateLabel(footer, "Pace", 12, 0.66, 0.62, 0.54)
+paceLabel:SetPoint("LEFT", footer, "TOPLEFT", 0, -84)
+local summaryPanel = CreateSurface(window, 640, 116)
+summaryPanel:SetPoint("TOPLEFT", 24, -58)
+summaryPanel:Hide()
+
+local function UpdateControl(button)
+    if button.selected then
+        button:SetBackdropColor(0.22, 0.17, 0.10, 1)
+        button:SetBackdropBorderColor(0.64, 0.48, 0.26, 1)
+        button.label:SetTextColor(1, 0.87, 0.62)
+    elseif button.hovered then
+        button:SetBackdropColor(0.17, 0.15, 0.12, 1)
+        button:SetBackdropBorderColor(0.48, 0.40, 0.28, 1)
+        button.label:SetTextColor(1, 0.96, 0.87)
+    else
+        button:SetBackdropColor(0.115, 0.10, 0.08, 1)
+        button:SetBackdropBorderColor(0.28, 0.25, 0.20, 1)
+        button.label:SetTextColor(0.82, 0.79, 0.72)
+    end
+    button.selectedMark:SetShown(button.selected)
+end
 
 local function CreateControl(label, name, parent)
     local button = CreateFrame("Button", name, parent or window, "BackdropTemplate")
-    button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 2 })
-    button:SetBackdropColor(0.13, 0.115, 0.09, 1)
-    button:SetBackdropBorderColor(0.4, 0.32, 0.2, 1)
-    button.label = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    button:SetBackdrop({ bgFile = white, edgeFile = white, edgeSize = 1 })
+    button.label = CreateLabel(button, label, 13)
     button.label:SetAllPoints(button)
     button:SetFontString(button.label)
     button:SetText(label)
-    button:SetHighlightTexture("Interface\\Buttons\\WHITE8X8")
-    button:GetHighlightTexture():SetVertexColor(0.8, 0.65, 0.3, 0.12)
+    button.selectedMark = button:CreateTexture(nil, "ARTWORK")
+    button.selectedMark:SetColorTexture(0.85, 0.66, 0.36, 1)
+    button.selectedMark:SetPoint("BOTTOMLEFT", 1, 1)
+    button.selectedMark:SetPoint("BOTTOMRIGHT", -1, 1)
+    button.selectedMark:SetHeight(2)
+    button:SetPushedTexture(white)
+    button:GetPushedTexture():SetVertexColor(0, 0, 0, 0.22)
     button:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(0.85, 0.68, 0.35, 1)
+        self.hovered = true
+        UpdateControl(self)
     end)
     button:SetScript("OnLeave", function(self)
-        if self.selected then self:SetBackdropBorderColor(0.85, 0.68, 0.35, 1)
-        else self:SetBackdropBorderColor(0.4, 0.32, 0.2, 1) end
+        self.hovered = false
+        UpdateControl(self)
     end)
+    UpdateControl(button)
     return button
 end
 
 local function SelectControl(button, selected)
     button.selected = selected
-    if selected then
-        button:LockHighlight()
-        button:SetBackdropColor(0.25, 0.19, 0.1, 1)
-        button:SetBackdropBorderColor(0.85, 0.68, 0.35, 1)
-        button.label:SetTextColor(1, 0.88, 0.57)
-    else
-        button:UnlockHighlight()
-        button:SetBackdropColor(0.13, 0.115, 0.09, 1)
-        button:SetBackdropBorderColor(0.4, 0.32, 0.2, 1)
-        button.label:SetTextColor(0.8, 0.75, 0.64)
-    end
+    UpdateControl(button)
 end
 
 local function CloseMenus()
-    for _, dropdown in ipairs(dropdowns) do dropdown.menu:Hide() end
+    for _, dropdown in ipairs(dropdowns) do
+        dropdown.menu:Hide()
+        SelectControl(dropdown, false)
+    end
 end
 
 local dismissMenu = CreateFrame("Button", nil, window)
@@ -116,31 +194,33 @@ dismissMenu:SetScript("OnClick", function() CloseMenus(); dismissMenu:Hide() end
 dismissMenu:Hide()
 
 local function CreateDropdown(label, name, column, options, choose)
-    local button = CreateControl(label, name)
-    button:SetSize(202, 32)
-    button:SetPoint("TOPLEFT", 18 + column * 210, -82)
+    local button = CreateControl(label, name, settingsPanel)
+    button:SetSize(200, 32)
+    button:SetPoint("TOPLEFT", 12 + column * 208, -28)
     button:SetFrameLevel(window:GetFrameLevel() + 6)
+    local caption = CreateLabel(button, label, 12, 0.66, 0.62, 0.54)
+    caption:SetPoint("BOTTOMLEFT", button, "TOPLEFT", 1, 6)
     button.label:ClearAllPoints()
-    button.label:SetPoint("LEFT", 8, 0)
+    button.label:SetPoint("LEFT", 10, 0)
+    button.label:SetPoint("RIGHT", -26, 0)
+    button.label:SetJustifyH("LEFT")
     local arrow = button:CreateTexture(nil, "OVERLAY")
     arrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-    arrow:SetSize(16, 16)
-    arrow:SetPoint("RIGHT", -4, 0)
-    local menu = CreateFrame("Frame", nil, window, "BackdropTemplate")
-    menu:SetSize(202, #options * 30 + 12)
+    arrow:SetSize(12, 12)
+    arrow:SetVertexColor(0.76, 0.70, 0.58)
+    arrow:SetPoint("RIGHT", -9, 0)
+    local menu = CreateSurface(window, 200, #options * 30 + 12)
     menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -4)
     menu:SetFrameLevel(window:GetFrameLevel() + 10)
-    menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-    menu:SetBackdropColor(0.07, 0.065, 0.055, 1)
-    menu:SetBackdropBorderColor(0.65, 0.5, 0.25, 1)
     menu:EnableMouse(true)
     menu:Hide()
     button.menu, button.options = menu, {}
     for index, option in ipairs(options) do
         local item = CreateControl(option.label, nil, menu)
-        item:SetSize(190, 28)
+        item:SetSize(188, 28)
         item:SetPoint("TOPLEFT", 6, -6 - (index - 1) * 30)
+        item.label:ClearAllPoints()
+        item.label:SetPoint("LEFT", 10, 0)
         item:SetScript("OnClick", function()
             CloseMenus()
             dismissMenu:Hide()
@@ -152,14 +232,17 @@ local function CreateDropdown(label, name, column, options, choose)
         local show = not menu:IsShown()
         CloseMenus()
         menu:SetShown(show)
+        SelectControl(button, show)
         dismissMenu:SetShown(show)
     end)
     dropdowns[#dropdowns + 1] = button
     return button
 end
 
-local close = CreateFrame("Button", nil, window, "UIPanelCloseButton")
-close:SetPoint("TOPRIGHT", 0, 0)
+local close = CreateControl("x", "AzerobicsCloseButton")
+close:SetSize(28, 28)
+close:SetPoint("TOPRIGHT", -20, -13)
+close.label:SetFont(uiFont, 18, "")
 close:SetScript("OnClick", function() window:Hide() end)
 window:SetScript("OnHide", function()
     window:StopMovingOrSizing()
@@ -170,48 +253,92 @@ window:SetScript("OnHide", function()
         summaryShown = false
     end
     running, debugMode, cuePose = false, false, nil
+    flightHadGuide = false
     StopCue()
 end)
 
-local soundButton = CreateFrame("CheckButton", "AzerobicsSoundButton", window, "UICheckButtonTemplate")
-soundButton:SetSize(24, 24)
-soundButton:SetPoint("TOPLEFT", 14, -50)
-soundButton.label = soundButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-soundButton.label:SetPoint("LEFT", soundButton, "RIGHT", 2, 0)
-soundButton.label:SetText("Sound cues")
+local function CreateToggle(label, name, x, hint)
+    local button = CreateFrame("CheckButton", name, settingsPanel, "BackdropTemplate")
+    button:SetSize(18, 18)
+    button:SetPoint("TOPLEFT", x, -78)
+    button:SetHitRectInsets(0, -106, -4, -4)
+    button:SetBackdrop({ bgFile = white, edgeFile = white, edgeSize = 1 })
+    button:SetBackdropColor(0.045, 0.04, 0.033, 1)
+    button:SetBackdropBorderColor(0.42, 0.35, 0.24, 1)
+    button:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    button:GetCheckedTexture():SetVertexColor(1, 0.86, 0.59)
+    button:SetHighlightTexture(white)
+    button:GetHighlightTexture():SetVertexColor(0.85, 0.66, 0.36, 0.15)
+    button.label = CreateLabel(button, label, 13)
+    button.label:SetPoint("LEFT", button, "RIGHT", 8, 0)
+    button:SetScript("OnEnter", function(self)
+        self:SetBackdropBorderColor(0.85, 0.66, 0.36, 1)
+        self.label:SetTextColor(1, 0.96, 0.87)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(label)
+        GameTooltip:AddLine(hint, 0.82, 0.79, 0.72, true)
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", function(self)
+        self:SetBackdropBorderColor(0.42, 0.35, 0.24, 1)
+        self.label:SetTextColor(0.91, 0.89, 0.84)
+        GameTooltip:Hide()
+    end)
+    return button
+end
+
+local soundButton = CreateToggle("Sound cues", "AzerobicsSoundButton", 14,
+    "Play an up or down cue for each movement.")
 soundButton:SetScript("OnClick", function(self)
     AzerobicsDB.soundCues = self:GetChecked()
     if not AzerobicsDB.soundCues then StopCue() end
 end)
 
-local autoButton = CreateFrame("CheckButton", "AzerobicsAutoButton", window, "UICheckButtonTemplate")
-autoButton:SetSize(24, 24)
-autoButton:SetPoint("TOPLEFT", 200, -50)
-autoButton.label = autoButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-autoButton.label:SetPoint("LEFT", autoButton, "RIGHT", 2, 0)
-autoButton.label:SetText("Start on flights")
+local autoButton = CreateToggle("Start on flights", "AzerobicsAutoButton", 146,
+    "Open the exercise guide when a flight starts.")
 autoButton:SetScript("OnClick", function(self)
     AzerobicsDB.autoStart = self:GetChecked()
 end)
 
-local volumeSlider = CreateFrame("Slider", "AzerobicsVolumeSlider", window, "OptionsSliderTemplate")
-volumeSlider:SetSize(144, 17)
-volumeSlider:SetPoint("TOPLEFT", 458, -54)
+local cycleButton = CreateToggle("Cycle workouts", "AzerobicsCycleButton", 284,
+    "Select the next exercise each time the guide opens while flying: push-ups, sit-ups, jumping jacks, then squats.")
+cycleButton:SetScript("OnClick", function(self)
+    AzerobicsDB.cycleWorkouts = self:GetChecked()
+end)
+
+local volumeSlider = CreateFrame("Slider", "AzerobicsVolumeSlider", settingsPanel)
+volumeSlider:SetSize(130, 18)
+volumeSlider:SetPoint("TOPLEFT", 444, -78)
+volumeSlider:SetOrientation("HORIZONTAL")
+volumeSlider:EnableMouse(true)
+local volumeTrack = volumeSlider:CreateTexture(nil, "BACKGROUND")
+volumeTrack:SetColorTexture(0.30, 0.26, 0.20, 1)
+volumeTrack:SetSize(130, 3)
+volumeTrack:SetPoint("CENTER")
+local volumeFill = volumeSlider:CreateTexture(nil, "ARTWORK")
+volumeFill:SetColorTexture(0.72, 0.54, 0.29, 1)
+volumeFill:SetPoint("LEFT")
+volumeFill:Hide()
+volumeSlider:SetThumbTexture(white)
+volumeSlider:GetThumbTexture():SetVertexColor(0.85, 0.68, 0.40, 1)
+volumeSlider:GetThumbTexture():SetSize(8, 16)
 volumeSlider:SetMinMaxValues(0, 100)
 volumeSlider:SetValueStep(25)
 volumeSlider:SetObeyStepOnDrag(true)
-volumeSlider.Low:SetText("")
-volumeSlider.High:SetText("")
-volumeSlider.Text:ClearAllPoints()
+volumeSlider.Text = CreateLabel(volumeSlider, "0%", 12, 0.82, 0.79, 0.72)
 volumeSlider.Text:SetPoint("LEFT", volumeSlider, "RIGHT", 8, 0)
-local volumeIcon = window:CreateTexture(nil, "ARTWORK")
-volumeIcon:SetSize(20, 20)
+local volumeIcon = settingsPanel:CreateTexture(nil, "ARTWORK")
+volumeIcon:SetTexture("Interface\\Common\\VoiceChat-Muted")
+volumeIcon:SetSize(16, 16)
 volumeIcon:SetPoint("RIGHT", volumeSlider, "LEFT", -8, 0)
+volumeIcon:SetVertexColor(0.82, 0.75, 0.61)
 volumeSlider:SetScript("OnValueChanged", function(self, value)
     local volume = math.floor(value / 25 + 0.5) * 25
     if value ~= volume then self:SetValue(volume); return end
     AzerobicsDB.cueVolume = volume
     self.Text:SetFormattedText("%d%%", volume)
+    volumeFill:SetSize(130 * volume / 100, 3)
+    volumeFill:SetShown(volume > 0)
     volumeIcon:SetTexture(volume == 0 and "Interface\\Common\\VoiceChat-Muted"
         or "Interface\\Common\\VoiceChat-Speaker")
     StopCue()
@@ -223,9 +350,11 @@ volumeSlider:SetScript("OnEnter", function(self)
 end)
 volumeSlider:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-local stage = CreateFrame("Frame", nil, window)
+local stageBorder = CreateSurface(window, 642, 402)
+stageBorder:SetPoint("TOP", 0, -179)
+local stage = CreateFrame("Frame", nil, stageBorder)
 stage:SetSize(640, 400)
-stage:SetPoint("TOP", 0, -124)
+stage:SetPoint("CENTER")
 
 local background = stage:CreateTexture(nil, "BACKGROUND")
 background:SetAllPoints(stage)
@@ -336,9 +465,9 @@ local function UpdateExerciseButtons()
 end
 
 for index, rate in ipairs(rates) do
-    local button = CreateControl(rate)
-    button:SetSize(118, 28)
-    button:SetPoint("BOTTOMLEFT", 18 + (index - 1) * 126, 10)
+    local button = CreateControl(rate, nil, footer)
+    button:SetSize(110, 32)
+    button:SetPoint("TOPLEFT", 58 + (index - 1) * 118, -68)
     button:SetScript("OnClick", function()
         cycleTime = math.min(cycleTime, durations[index])
         selectedSpeed = index
@@ -349,8 +478,11 @@ for index, rate in ipairs(rates) do
 end
 
 local summaryButton = CreateControl("Close summary", "AzerobicsSummaryClose")
-summaryButton:SetSize(160, 28)
-summaryButton:SetPoint("BOTTOM", 0, 10)
+summaryButton:SetSize(180, 34)
+summaryButton:SetPoint("BOTTOM", 0, 16)
+local summaryHint = CreateLabel(summaryButton, "Your totals stay here until you close the window.", 13, 0.66, 0.62, 0.54)
+summaryHint:SetPoint("BOTTOM", summaryButton, "TOP", 0, 18)
+SelectControl(summaryButton, true)
 summaryButton:SetScript("OnClick", function() window:Hide() end)
 summaryButton:Hide()
 
@@ -359,6 +491,11 @@ local function Start(faction, isDebug)
     faction = faction or (AzerobicsDB.faction == "auto" and UnitFactionGroup("player") or AzerobicsDB.faction)
     local images = factions[faction]
     if not images then return end
+    if AzerobicsDB.cycleWorkouts and UnitOnTaxi("player") and not window:IsShown() then
+        selectedExercise = selectedExercise % #exercises + 1
+        AzerobicsDB.exercise = exercises[selectedExercise].key
+        UpdateExerciseButtons()
+    end
     activeFaction = faction
     ResolveCharacter()
     UpdateSelectors()
@@ -372,6 +509,10 @@ local function Start(faction, isDebug)
         flightHadGuide = true
     end
     summaryButton:Hide()
+    summaryPanel:Hide()
+    settingsPanel:Show()
+    footer:Show()
+    subtitle:SetText("Your in-flight exercise break")
     CloseMenus()
     dismissMenu:Hide()
     for _, dropdown in ipairs(dropdowns) do dropdown:Show() end
@@ -389,9 +530,9 @@ local function Start(faction, isDebug)
 end
 
 for index, exercise in ipairs(exercises) do
-    local button = CreateControl(exercise.label)
-    button:SetSize(150, 28)
-    button:SetPoint("BOTTOMLEFT", 18 + (index - 1) * 158, 46)
+    local button = CreateControl(exercise.label, nil, footer)
+    button:SetSize(154, 36)
+    button:SetPoint("TOPLEFT", (index - 1) * 162, -20)
     button:SetScript("OnClick", function()
         if selectedExercise == index then return end
         selectedExercise = index
@@ -402,7 +543,7 @@ for index, exercise in ipairs(exercises) do
     exerciseButtons[index] = button
 end
 
-CreateDropdown("Faction", "AzerobicsFactionButton", 0, {
+CreateDropdown("Background", "AzerobicsFactionButton", 0, {
     { label = "Auto", value = "auto" }, { label = "Horde", value = "Horde" },
     { label = "Alliance", value = "Alliance" },
 }, function(value)
@@ -435,9 +576,9 @@ end)
 
 local minimapButton = CreateFrame("Button", "AzerobicsMinimapButton", Minimap)
 minimapButton:SetSize(32, 32)
-minimapButton:SetPoint("TOPLEFT", -8, 0)
 minimapButton:SetFrameLevel(Minimap:GetFrameLevel() + 5)
 minimapButton:RegisterForClicks("LeftButtonUp")
+minimapButton:RegisterForDrag("LeftButton")
 minimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 local minimapBackground = minimapButton:CreateTexture(nil, "BACKGROUND")
 minimapBackground:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
@@ -451,8 +592,40 @@ local minimapBorder = minimapButton:CreateTexture(nil, "OVERLAY")
 minimapBorder:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 minimapBorder:SetSize(54, 54)
 minimapBorder:SetPoint("TOPLEFT")
-minimapButton:SetScript("OnClick", function()
-    if summaryShown then return end
+
+local function UpdateMinimapPosition()
+    local angle = math.rad(AzerobicsDB.minimapAngle)
+    minimapButton:SetPoint("CENTER", Minimap, "CENTER",
+        math.cos(angle) * (Minimap:GetWidth() / 2 + 5),
+        math.sin(angle) * (Minimap:GetHeight() / 2 + 5))
+end
+
+local function DragMinimapButton()
+    local centerX, centerY = Minimap:GetCenter()
+    local cursorX, cursorY = GetCursorPosition()
+    local scale = Minimap:GetEffectiveScale()
+    AzerobicsDB.minimapAngle = math.deg(math.atan2(cursorY / scale - centerY, cursorX / scale - centerX)) % 360
+    UpdateMinimapPosition()
+end
+
+local function StopMinimapDrag(self)
+    self:SetScript("OnUpdate", nil)
+    self.dragging = false
+    self:UnlockHighlight()
+end
+
+minimapButton:SetScript("OnMouseDown", function(self) self.dragged = false end)
+minimapButton:SetScript("OnDragStart", function(self)
+    self.dragging, self.dragged = true, true
+    self:LockHighlight()
+    GameTooltip:Hide()
+    self:SetScript("OnUpdate", DragMinimapButton)
+    DragMinimapButton()
+end)
+minimapButton:SetScript("OnDragStop", StopMinimapDrag)
+minimapButton:SetScript("OnHide", StopMinimapDrag)
+minimapButton:SetScript("OnClick", function(self)
+    if self.dragged or summaryShown then return end
     if window:IsShown() then
         window:Hide()
     else
@@ -460,10 +633,12 @@ minimapButton:SetScript("OnClick", function()
     end
 end)
 minimapButton:SetScript("OnEnter", function(self)
+    if self.dragging then return end
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:SetText("Azerobics")
     GameTooltip:AddLine(summaryShown and "Click Close summary in the window."
         or "Click to open or close the guide.", 1, 1, 1)
+    GameTooltip:AddLine("Hold the left mouse button and drag to move around the minimap.", 0.8, 0.75, 0.64)
     GameTooltip:Show()
 end)
 minimapButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -522,8 +697,8 @@ local function CheckFlight()
         down:Hide()
         up:Show()
         local seconds = math.floor(GetTime() - flightStartTime)
-        counter:SetFont(STANDARD_TEXT_FONT, 22, "OUTLINE")
-        counter:SetTextColor(1, 1, 1)
+        counter:SetFont(uiFont, 19, "")
+        counter:SetTextColor(0.96, 0.92, 0.82)
         local counts = {}
         for _, exercise in ipairs(exercises) do
             local count = flightRepetitions[exercise.key] or 0
@@ -532,8 +707,8 @@ local function CheckFlight()
         if #counts == 0 then counts[1] = exercises[selectedExercise].label .. ": 0" end
         local flightTime = string.format("Flight time: %d:%02d", math.floor(seconds / 60), seconds % 60)
         counter:ClearAllPoints()
-        counter:SetPoint("TOP", window, "TOP", 0, -74)
-        counter:SetSize(620, 120)
+        counter:SetPoint("TOP", summaryPanel, "TOP", 0, -10)
+        counter:SetSize(612, 102)
         counter:SetText(flightTime .. (#counts == 1 and " | " or "\n") .. table.concat(counts, "\n"))
         summaryShown = true
         for index, name in ipairs(UISpecialFrames) do
@@ -547,6 +722,10 @@ local function CheckFlight()
         for _, dropdown in ipairs(dropdowns) do dropdown:Hide() end
         for _, button in ipairs(speedButtons) do button:Hide() end
         for _, button in ipairs(exerciseButtons) do button:Hide() end
+        settingsPanel:Hide()
+        footer:Hide()
+        summaryPanel:Show()
+        subtitle:SetText("Flight complete - your session totals")
         summaryButton:Show()
         window:Show()
     elseif not debugMode and not summaryShown then
@@ -563,6 +742,11 @@ driver:SetScript("OnEvent", function(_, event, name)
     if event == "ADDON_LOADED" then
         if name ~= addonName then return end
         if type(AzerobicsDB) ~= "table" then AzerobicsDB = {} end
+        local minimapAngle = AzerobicsDB.minimapAngle
+        if type(minimapAngle) ~= "number" or not (minimapAngle >= 0 and minimapAngle < 360) then
+            AzerobicsDB.minimapAngle = 135
+        end
+        UpdateMinimapPosition()
         local savedSpeed = AzerobicsDB.speed
         if AzerobicsDB.speedVersion ~= 2 then
             local previousSpeeds = { 2, 3, 4, 5, 5 }
@@ -588,10 +772,12 @@ driver:SetScript("OnEvent", function(_, event, name)
         UpdateSelectors()
         if type(AzerobicsDB.soundCues) ~= "boolean" then AzerobicsDB.soundCues = true end
         if type(AzerobicsDB.autoStart) ~= "boolean" then AzerobicsDB.autoStart = true end
+        if type(AzerobicsDB.cycleWorkouts) ~= "boolean" then AzerobicsDB.cycleWorkouts = false end
         local volumes = { [0] = true, [25] = true, [50] = true, [75] = true, [100] = true }
         if not volumes[AzerobicsDB.cueVolume] then AzerobicsDB.cueVolume = 100 end
         soundButton:SetChecked(AzerobicsDB.soundCues)
         autoButton:SetChecked(AzerobicsDB.autoStart)
+        cycleButton:SetChecked(AzerobicsDB.cycleWorkouts)
         volumeSlider:SetValue(AzerobicsDB.cueVolume)
         UpdateSpeedButtons()
         UpdateExerciseButtons()

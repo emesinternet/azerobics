@@ -21,10 +21,18 @@ For WoW Forever beta 1.60.1.
 The guide opens when a flight starts. Use the minimap button or `/azerobics`
 to open it on the ground. Use `/azerobics a` for Alliance or `/azerobics h` for Horde.
 
+Left-click the minimap button to open or close the guide. Hold the left mouse
+button and drag it around the minimap edge to move it. The game saves its position.
+Closing the guide during a flight cancels the workout and skips the landing summary.
+Open it again before landing to start the guide and enable the summary again.
+
 Use the three dropdowns above the character to change the background, race,
 and sex. Select an exercise below the image, then choose a pace in the bottom
 row. Pace changes the pause between repetitions. Drag the title area to move
 the window.
+
+Check **Cycle workouts** beside **Start on flights** to select the next exercise
+each time the guide opens while flying. This setting is off by default.
 
 [CurseForge](https://www.curseforge.com/wow/addons/azerobics) · [Full guide](Azerobics/README.md)
 

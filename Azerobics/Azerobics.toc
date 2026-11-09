@@ -2,7 +2,8 @@
 ## Title: Azerobics
 ## Notes: Follow exercise cues during flight paths.
 ## Author: MarcSinger.xyz
-## Version: 1.1.0
+## Version: 1.2.0
+## IconTexture: Interface\AddOns\Azerobics\Art\azerobics-icon.tga
 ## SavedVariables: AzerobicsDB
 ## X-Curse-Project-ID: 1737495
 
